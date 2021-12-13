@@ -50,7 +50,7 @@ exec sudo resolvectl dns "${interface}" "${address}"
 exec sudo resolvectl domain "${interface}" "~${interface}"
 
 # exit here if temporal patch mode set
-[[ $temporal =~ ^[yY].*$ ]] && exit 0;
+[[ ! $temporal =~ ^[yY].*$ ]] && exit 0;
 
 log INFO "installing service to /etc/systemd/system/lxd-dns-${interface}.service"
 
