@@ -35,18 +35,9 @@ log() {
 
 exec() {
     echo "> $@"
-    echo "> $@" >> "${_log}"
 
-    "$@" >> "${_log}" 2>&1
+    "$@"
 }
-
-rootify() {
-    if [ "$(id -u)" != "0" ]; then
-        log ERROR "current account doesn't have root permission!"
-    fi
-}
-
-rootify
 
 interface="${1}"
 temporal="${2}"
