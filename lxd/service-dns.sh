@@ -54,7 +54,7 @@ exec sudo resolvectl domain "${interface}" "~${interface}"
 
 log INFO "installing service to /etc/systemd/system/lxd-dns-${interface}.service"
 
-cat <<EOF
+sudo tee -a "/etc/systemd/system/lxd-dns-${interface}.service" > /dev/null <<EOT
 [Unit]
 Description=LXD per-link DNS configuration for ${interface}
 BindsTo=sys-subsystem-net-devices-${interface}.device
@@ -67,7 +67,7 @@ ExecStart=/usr/bin/resolvectl domain ${interface} '~${interface}'
 
 [Install]
 WantedBy=sys-subsystem-net-devices-${interface}.device
-EOF > "/etc/systemd/system/lxd-dns-${interface}.service"
+EOT
 
 log INFO "starting service"
 
