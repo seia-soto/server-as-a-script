@@ -40,12 +40,25 @@ gh_tags() {
 }
 
 gh_archive() {
-    log INFO "fetching ${1}#${2} to ${_tmp}/$3"
+    log INFO "fetching ${1}#${2} to ${_tmp}/${3}"
 
     mkdir -p "${_tmp}/${3}"
 
     curl -sL "https://github.com/${1}/archive/${2}.tar.gz" -o "${_tmp}/${3}.tar.gz"
     tar -xf "${_tmp}/${3}.tar.gz" -C "${_tmp}/${3}" --strip-components=1
+}
+
+gh_clone() {
+    log INFO "fetching ${1}#${2} to ${_tmp}/${3}"
+
+    git clone "https://github.com/${1}.git" "${_tmp}/${3}"
+
+    cd "${_tmp}/${3}"
+
+    git checkout "${2}"
+    git submodule update --init --recursive
+
+    back
 }
 
 rootify() {
@@ -58,10 +71,11 @@ rootify
 
 log INFO "preparing environment"
 _tmp="$(mktemp -d)"
+_configure_args=""
 
 log INFO "installing required packages"
 apt-get update && apt-get upgrade -y
-apt-get install -y ca-certificates lsb-release util-linux build-essential curl jq \
+apt-get install -y ca-certificates lsb-release util-linux build-essential curl jq git \
     libgd-dev libxml2-dev libpcre3-dev libxslt1-dev
 
 # fetch openssl
@@ -79,6 +93,7 @@ for i in $(gh_tags $_repo); do
 done
 
 gh_archive $_repo $_ref "openssl"
+_configure_args+="--with-openssl=${_tmp}/openssl "
 
 # fetch zlib
 _repo="cloudflare/zlib"
@@ -95,6 +110,24 @@ for i in $(gh_tags $_repo); do
 done
 
 gh_archive $_repo $_ref "zlib"
+_configure_args+="--with-zlib=${_tmp}/zlib "
+
+#fetch ngx_brotli
+_repo="google/ngx_brotli"
+_ref="v1.0.0rc"
+
+for i in $(gh_tags $_repo); do
+    _ref_test=$(echo "${i}" | jq -c -r ".ref")
+
+    if [[ $_ref_test =~ ^refs\/tags\/v[0-9]+.[0-9]+.[0-9]+(?:rc)?$ ]]; then
+        _ref="$_ref_test"
+
+        break
+    fi
+done
+
+gh_clone $_repo $_ref "ngx_brotli"
+_configure_args+="--add-module=${_tmp}/ngx_brotli"
 
 # fetch nginx
 _nginx_ref="nginx-1.21.4"
@@ -155,9 +188,8 @@ cd "${_tmp}/nginx"
     --with-http_v2_module \
     --with-http_ssl_module \
     --with-pcre-jit \
-    --with-openssl="${_tmp}/openssl" \
-    --with-zlib="${_tmp}/zlib"
-    --with-cc-opt="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -fPIC -Wdate-time -D_FORTIFY_SOURCE=2"
+    --with-cc-opt="-g -O2 -fstack-protector-strong -Wformat -Werror=format-security -fPIC -Wdate-time -D_FORTIFY_SOURCE=2" \
+    ${_configure_args}
 make
 make install
 
