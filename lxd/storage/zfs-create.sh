@@ -33,9 +33,13 @@ size="${1}"
 name="${2}"
 location="${3}"
 
-[[ "$(lxc storage list --format csv)" =~ ^${name},$ ]] && log ERROR "stroage pool already exists";
+[[ ! -z "$(lxc storage list --format csv | grep -Eo ${name},)" ]] && log ERROR "stroage pool already exists";
 
+log INFO "creating new binary file with truncate on ${location}"
 exec sudo truncate "-s ${size}" "${location}"
+
+log INFO "creating new zpool called ${name}"
 exec sudo zpool create "${name}" "${location}"
 
+log INFO "registering storage pool to lxc"
 exec lxc storage create "${name}" zfs "source=${name}"
