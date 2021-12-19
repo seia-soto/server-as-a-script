@@ -1,0 +1,30 @@
+version: '3'
+
+services:
+  poste:
+    image: analogic/poste.io
+    container_name: poste
+    hostname: mail.seia.io
+    volumes:
+      - ./data:/data
+    environment:
+      - TZ=Asia/Seoul
+      - HTTPS=OFF
+      - DISABLE_RSPAMD=TRUE
+      - DISABLE_CLAMAV=TRUE
+    expose:
+      - 80
+    ports:
+      - '25:25'
+      - 110:110
+      - 143:143
+      - 465:465
+      - 587:587
+      - 993:993
+      - 995:995
+    networks:
+      - ingress
+
+networks:
+  ingress:
+    external: true
