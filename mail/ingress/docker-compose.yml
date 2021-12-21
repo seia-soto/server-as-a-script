@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  ingress:
+    image: nginx
+    container_name: ingress
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./conf.d:/etc/nginx/conf.d
+      - '/home/user/.acme.sh:/etc/nginx/certs'
+    networks:
+      - ingress
+
+networks:
+  ingress:
+    external: true
