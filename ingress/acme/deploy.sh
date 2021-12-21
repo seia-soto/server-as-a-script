@@ -34,7 +34,10 @@ rootify
 log INFO "installing required packages"
 apt-get update && apt-get upgrade -y
 apt-get install -y ca-certificates util-linux curl openssl git \
-    jq publicsuffix dnsutils
+    jq publicsuffix dnsutils cron
+
+systemctl cron enable
+systemctl cron start
 
 log INFO "creating new non-root user"
 adduser --disabled-password --gecos "" ingress
@@ -84,3 +87,8 @@ log INFO "finalizing"
 chown -R ingress:ingress /etc/dehydrated
 
 dehydrated --register --accept-terms
+
+crontab -l > /tmp/cron
+echo "0 0 * * 0 dehydrated -c && nginx -t" >> /tmp/cron
+crontab /tmp/cron
+rm /tmp/cron
