@@ -84,11 +84,12 @@ chmod +x /etc/dehydrated/hooks/cloudflare/cf-hook.sh
 
 # postinstall
 log INFO "finalizing"
+chown -R ingress:ingress /opt/dehydrated
 chown -R ingress:ingress /etc/dehydrated
 
 dehydrated --register --accept-terms
 
-crontab -l > /tmp/cron
-echo "0 0 * * 0 dehydrated -c && nginx -t" >> /tmp/cron
-crontab /tmp/cron
+crontab -u ingress -l > /tmp/cron
+echo "0 0 * * 0 dehydrated -c && nginx -t && nginx -s reload" >> /tmp/cron
+crontab -u ingress /tmp/cron
 rm /tmp/cron

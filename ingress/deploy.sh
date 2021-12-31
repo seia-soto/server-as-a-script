@@ -73,6 +73,9 @@ log INFO "preparing environment"
 _tmp="$(mktemp -d)"
 _configure_args=""
 
+log INFO "creating new non-root user"
+adduser --disabled-password --gecos "" ingress
+
 log INFO "installing required packages"
 apt-get update && apt-get upgrade -y
 apt-get install -y ca-certificates lsb-release util-linux build-essential curl jq git \
@@ -197,6 +200,8 @@ back
 # post configuration
 mkdir -p /var/lib/nginx/{body,fastcgi,proxy,scgi,uwsgi}
 mkdir -p /etc/nginx/{conf.d,snippets}
+
+sed -i -e "/#user/s/^#.*/user ingress/" /etc/nginx/nginx.conf
 
 # install service
 tee -a /lib/systemd/system/nginx.service > /dev/null <<'EOT'
