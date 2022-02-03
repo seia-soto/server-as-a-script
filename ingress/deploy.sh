@@ -173,6 +173,7 @@ cd "${_tmp}/nginx"
     --with-http_mp4_module \
     --with-http_stub_status_module \
     --with-http_realip_module \
+    --with-stream_realip_module \
     --with-http_auth_request_module \
     --with-http_dav_module \
     --with-http_addition_module \
@@ -204,7 +205,7 @@ mkdir -p /etc/nginx/{conf.d,snippets}
 sed -i -e "/#user/s/^#.*/user ingress/" /etc/nginx/nginx.conf
 
 # install service
-tee -a /lib/systemd/system/nginx.service > /dev/null <<'EOT'
+tee /lib/systemd/system/nginx.service > /dev/null <<'EOT'
 [Unit]
 Description=The NGINX HTTP and reverse proxy server
 After=syslog.target network-online.target remote-fs.target nss-lookup.target
@@ -222,4 +223,9 @@ PrivateTmp=true
 [Install]
 WantedBy=multi-user.target
 EOT
+
+tee /etc/nginx/snippets/proxy.conf > /dev/null <<'EOT'
+set_real_ip_from 127.0.0.1;
+EOT
+
 systemctl daemon-reload
